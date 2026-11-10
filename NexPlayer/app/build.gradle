@@ -1,0 +1,84 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.nex.player.ssk'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.nex.player.ssk"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // No keystore - unsigned APK for GitHub distribution
+        }
+        debug {
+            applicationIdSuffix ".debug"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // Task for CI to read the version name
+    task printVersionName {
+        doLast {
+            println android.defaultConfig.versionName
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    // AndroidX
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.preference:preference:1.2.1'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+
+    // ExoPlayer / Media3
+    implementation 'androidx.media3:media3-exoplayer:1.3.0'
+    implementation 'androidx.media3:media3-exoplayer-hls:1.3.0'
+    implementation 'androidx.media3:media3-exoplayer-dash:1.3.0'
+    implementation 'androidx.media3:media3-exoplayer-smoothstreaming:1.3.0'
+    implementation 'androidx.media3:media3-ui:1.3.0'
+    implementation 'androidx.media3:media3-datasource-okhttp:1.3.0'
+    implementation 'androidx.media3:media3-exoplayer-rtsp:1.3.0'
+
+    // DRM
+    implementation 'androidx.media3:media3-exoplayer-ima:1.3.0'
+
+    // Networking
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+
+    // Image loading
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
+
+    // Room DB for providers/channels
+    implementation 'androidx.room:room-runtime:2.6.1'
+    annotationProcessor 'androidx.room:room-compiler:2.6.1'
+
+    // Gson
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // XML parsing for XMLTV EPG
+    implementation 'org.simpleframework:simple-xml:2.7.1'
+}
