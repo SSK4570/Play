@@ -1,0 +1,25 @@
+# Android Studio
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# App build outputs (keep structure, ignore binaries)
+app/build/
+
+# Kotlin
+*.kotlin_module
+
+# Gradle wrapper jar (keep properties, ignore jar)
+gradle/wrapper/gradle-wrapper.jar
+
+# Keystore - NEVER commit keystores
+*.jks
+*.keystore
+keystore.properties

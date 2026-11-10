@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Black/Red Theme -->
+    <color name="colorPrimary">#CC0000</color>
+    <color name="colorPrimaryDark">#990000</color>
+    <color name="colorPrimaryVariant">#FF1A1A</color>
+    <color name="colorAccent">#FF3333</color>
+
+    <!-- Backgrounds -->
+    <color name="bgDark">#0D0D0D</color>
+    <color name="bgCard">#1A1A1A</color>
+    <color name="bgDialog">#7A1515</color>
+    <color name="bgDialogDark">#5C0F0F</color>
+    <color name="bgToolbar">#1A0000</color>
+    <color name="bgSelected">#CC0000</color>
+    <color name="bgCategoryHeader">#2D5A1B</color>
+
+    <!-- Text -->
+    <color name="textPrimary">#FFFFFF</color>
+    <color name="textSecondary">#AAAAAA</color>
+    <color name="textHint">#666666</color>
+    <color name="textRed">#FF4444</color>
+
+    <!-- Player -->
+    <color name="playerBg">#000000</color>
+    <color name="playerControls">#CC000099</color>
+    <color name="progressBar">#CC0000</color>
+
+    <!-- Status indicator -->
+    <color name="statusLive">#00CC44</color>
+    <color name="statusHD">#CC0000</color>
+
+    <!-- Misc -->
+    <color name="divider">#2A2A2A</color>
+    <color name="iconTint">#CCCCCC</color>
+    <color name="iconTintActive">#FFFFFF</color>
+    <color name="ripple">#33CC0000</color>
+    <color name="tagBg">#222222</color>
+</resources>

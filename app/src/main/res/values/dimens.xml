@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="channel_logo_size">56dp</dimen>
+    <dimen name="channel_item_height">72dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_medium">16dp</dimen>
+    <dimen name="padding_large">24dp</dimen>
+    <dimen name="card_elevation">4dp</dimen>
+    <dimen name="dialog_corner_radius">12dp</dimen>
+    <dimen name="provider_icon_size">40dp</dimen>
+</resources>
