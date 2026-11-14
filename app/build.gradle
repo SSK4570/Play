@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.nex.player.ssk'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.nex.player.ssk"
         minSdk 21
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0.0"
     }
@@ -30,7 +30,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    // Task for CI to read the version name
     task printVersionName {
         doLast {
             println android.defaultConfig.versionName
@@ -40,29 +39,38 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    configurations.all {
+        // Force a consistent media3 version across all transitive deps
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'androidx.media3') {
+                details.useVersion '1.4.1'
+            }
+        }
+        // Exclude IMA's bundled old support library that causes windowKeepScreenOn
+        exclude group: 'com.google.ads.interactivemedia.v3', module: 'interactivemedia'
+    }
 }
 
 dependencies {
     // AndroidX
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 
-    // ExoPlayer / Media3
-    implementation 'androidx.media3:media3-exoplayer:1.3.0'
-    implementation 'androidx.media3:media3-exoplayer-hls:1.3.0'
-    implementation 'androidx.media3:media3-exoplayer-dash:1.3.0'
-    implementation 'androidx.media3:media3-exoplayer-smoothstreaming:1.3.0'
-    implementation 'androidx.media3:media3-ui:1.3.0'
-    implementation 'androidx.media3:media3-datasource-okhttp:1.3.0'
-    implementation 'androidx.media3:media3-exoplayer-rtsp:1.3.0'
-
-    // DRM
-    implementation 'androidx.media3:media3-exoplayer-ima:1.3.0'
+    // ExoPlayer / Media3 - 1.4.1 fixes windowKeepScreenOn style issue
+    implementation 'androidx.media3:media3-exoplayer:1.4.1'
+    implementation 'androidx.media3:media3-exoplayer-hls:1.4.1'
+    implementation 'androidx.media3:media3-exoplayer-dash:1.4.1'
+    implementation 'androidx.media3:media3-exoplayer-smoothstreaming:1.4.1'
+    implementation 'androidx.media3:media3-ui:1.4.1'
+    implementation 'androidx.media3:media3-datasource-okhttp:1.4.1'
+    implementation 'androidx.media3:media3-exoplayer-rtsp:1.4.1'
+    // Note: media3-exoplayer-ima removed - it pulls IMA SDK which has broken styles
 
     // Networking
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
@@ -79,6 +87,6 @@ dependencies {
     // Gson
     implementation 'com.google.code.gson:gson:2.10.1'
 
-    // XML parsing for XMLTV EPG
-    implementation 'org.simpleframework:simple-xml:2.7.1'
+    // XML pull parser for XMLTV EPG (built into Android, no extra dep needed)
+    // simple-xml removed - causes stax/woodstox conflicts on modern AGP
 }
