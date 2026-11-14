@@ -42,6 +42,8 @@ public class AddProviderActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add_provider);
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+        View btnBackToolbar = findViewById(R.id.btnBackToolbar);
+        if (btnBackToolbar != null) btnBackToolbar.setOnClickListener(v -> finish());
 
         // Playlist URL option
         LinearLayout optUrl = findViewById(R.id.optPlaylistUrl);
@@ -67,6 +69,7 @@ public class AddProviderActivity extends AppCompatActivity {
         EditText etUrl = dialog.findViewById(R.id.etUrl);
         EditText etEpg = dialog.findViewById(R.id.etEpgUrl);
 
+        dialog.findViewById(R.id.btnDialogBack).setOnClickListener(v -> dialog.dismiss());
         dialog.findViewById(R.id.btnCancel).setOnClickListener(v -> dialog.dismiss());
 
         dialog.findViewById(R.id.btnAdd).setOnClickListener(v -> {

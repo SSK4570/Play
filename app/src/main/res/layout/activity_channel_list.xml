@@ -52,18 +52,39 @@
 
     </LinearLayout>
 
-    <!-- Category header (shows current group) -->
-    <TextView
+    <!-- Category header — tappable arrow back to group list -->
+    <LinearLayout
         android:id="@+id/tvCategoryHeader"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="44dp"
         android:background="@color/bgCategoryHeader"
-        android:textColor="@color/textPrimary"
-        android:textSize="15sp"
-        android:textStyle="bold"
+        android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:visibility="gone" />
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:visibility="gone"
+        android:foreground="?attr/selectableItemBackground">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_chevron_right"
+            android:tint="@color/colorPrimary"
+            android:rotation="180" />
+
+        <TextView
+            android:id="@+id/tvCategoryHeaderText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="@color/bgCategoryHeaderText"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:paddingStart="8dp"
+            android:ellipsize="end"
+            android:maxLines="1" />
+
+    </LinearLayout>
 
     <!-- Search bar -->
     <LinearLayout
@@ -88,7 +109,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:hint="Search channels..."
+            android:hint="@string/search_channels"
             android:textColorHint="@color/textHint"
             android:textColor="@color/textPrimary"
             android:background="@android:color/transparent"
@@ -98,7 +119,7 @@
 
     </LinearLayout>
 
-    <!-- Progress -->
+    <!-- Progress bar -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="match_parent"
@@ -108,30 +129,29 @@
         android:indeterminateTint="@color/colorPrimary"
         android:visibility="gone" />
 
-    <!-- Main content: group list or channel list -->
+    <!-- Main content -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
 
-        <!-- Group/Category list -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvGroups"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
+            android:paddingTop="4dp"
             android:paddingBottom="8dp" />
 
-        <!-- Channel list -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvChannels"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone"
             android:clipToPadding="false"
+            android:paddingTop="4dp"
             android:paddingBottom="8dp" />
 
-        <!-- Empty state -->
         <LinearLayout
             android:id="@+id/emptyState"
             android:layout_width="match_parent"
@@ -157,17 +177,5 @@
         </LinearLayout>
 
     </FrameLayout>
-
-    <!-- Refresh FAB -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabRefresh"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_refresh"
-        app:backgroundTint="@color/colorPrimary"
-        app:tint="@color/textPrimary"
-        android:contentDescription="Refresh" />
 
 </LinearLayout>

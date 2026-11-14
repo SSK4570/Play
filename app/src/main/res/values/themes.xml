@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Base app theme -->
     <style name="Theme.NexPlayer" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
@@ -13,6 +14,9 @@
         <item name="android:navigationBarColor">@color/bgDark</item>
         <item name="android:textColorPrimary">@color/textPrimary</item>
         <item name="android:textColorSecondary">@color/textSecondary</item>
+        <!-- EditText cursor/handle red -->
+        <item name="colorControlActivated">@color/colorPrimary</item>
+        <item name="colorControlHighlight">@color/ripple</item>
     </style>
 
     <style name="Theme.NexPlayer.Splash" parent="Theme.NexPlayer">
@@ -25,11 +29,38 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
+    <!-- Dark red dialog theme -->
     <style name="NexDialog" parent="Theme.MaterialComponents.Dialog">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorSurface">@color/bgDialog</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
+        <item name="android:textColorPrimary">@color/textPrimary</item>
+        <item name="android:textColorSecondary">@color/textSecondary</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="colorControlActivated">@color/colorPrimary</item>
+        <!-- Button colors in dialog -->
+        <item name="buttonBarPositiveButtonStyle">@style/NexDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/NexDialogButtonNeg</item>
+    </style>
+
+    <style name="NexDialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/colorPrimary</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="NexDialogButtonNeg" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/textSecondary</item>
+    </style>
+
+    <!-- Alert dialog override -->
+    <style name="NexAlertDialog" parent="Theme.MaterialComponents.Dialog.Alert">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorSurface">@color/bgDialog</item>
+        <item name="colorOnSurface">@color/textPrimary</item>
         <item name="android:textColorPrimary">@color/textPrimary</item>
         <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="buttonBarPositiveButtonStyle">@style/NexDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/NexDialogButtonNeg</item>
     </style>
 
     <!-- Toolbar -->
@@ -52,7 +83,7 @@
         <item name="cornerRadius">4dp</item>
     </style>
 
-    <!-- Channel item text -->
+    <!-- Channel text styles -->
     <style name="ChannelName" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">@color/textPrimary</item>
         <item name="android:textSize">15sp</item>
