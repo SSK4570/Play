@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -41,54 +42,84 @@ public class ChannelAdapter extends RecyclerView.Adapter<ChannelAdapter.VH> {
     }
 
     @Override
-    public void onBindViewHolder(@NonNull VH holder, int position) {
+    public void onBindViewHolder(@NonNull VH h, int position) {
         Channel ch = items.get(position);
 
-        holder.tvName.setText(ch.getName());
-
-        // EPG
-        if (ch.hasEpg()) {
-            holder.tvEpg.setText(ch.getEpgTitle());
-            if (ch.getEpgStart() != null && ch.getEpgEnd() != null) {
-                holder.tvTime.setText(ch.getEpgStart() + "-" + ch.getEpgEnd());
-                holder.tvTime.setVisibility(View.VISIBLE);
-            } else {
-                holder.tvTime.setVisibility(View.GONE);
-            }
-        } else {
-            holder.tvEpg.setText(R.string.no_epg);
-            holder.tvTime.setVisibility(View.GONE);
-        }
+        h.tvName.setText(ch.getName());
 
         // Logo
         if (ch.getLogoUrl() != null && !ch.getLogoUrl().isEmpty()) {
-            Glide.with(holder.itemView.getContext())
+            h.ivLogo.clearColorFilter();
+            Glide.with(h.itemView.getContext())
                     .load(ch.getLogoUrl())
-                    .placeholder(R.drawable.ic_play)
-                    .error(R.drawable.ic_play)
+                    .placeholder(R.drawable.ic_tv)
+                    .error(R.drawable.ic_tv)
                     .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .into(holder.ivLogo);
-            holder.ivLogo.setColorFilter(null);
+                    .into(h.ivLogo);
         } else {
-            holder.ivLogo.setImageResource(R.drawable.ic_play);
-            holder.ivLogo.setColorFilter(holder.itemView.getContext().getColor(R.color.iconTint));
+            h.ivLogo.setImageResource(R.drawable.ic_tv);
+            h.ivLogo.setColorFilter(h.itemView.getContext().getColor(R.color.iconTint));
         }
 
-        holder.itemView.setOnClickListener(v -> listener.onClick(ch));
+        // EPG
+        if (ch.hasEpg() && ch.getEpgTitle() != null && !ch.getEpgTitle().isEmpty()) {
+            h.tvEpgTitle.setText(ch.getEpgTitle());
+            h.tvEpgTitle.setVisibility(View.VISIBLE);
+
+            // Time range
+            if (ch.getEpgStart() != null && ch.getEpgEnd() != null) {
+                h.tvEpgTime.setText(ch.getEpgStart() + " - " + ch.getEpgEnd());
+                h.layoutNowTime.setVisibility(View.VISIBLE);
+            } else {
+                h.layoutNowTime.setVisibility(View.GONE);
+            }
+
+            // Progress
+            int prog = ch.getEpgProgress();
+            if (prog >= 0) {
+                h.pbEpg.setProgress(prog);
+                h.pbEpg.setVisibility(View.VISIBLE);
+            } else {
+                h.pbEpg.setVisibility(View.GONE);
+            }
+
+            // Next show
+            if (ch.getEpgNextTitle() != null && !ch.getEpgNextTitle().isEmpty()) {
+                h.tvEpgNext.setText("Next  " + ch.getEpgNextTime() + "  ·  " + ch.getEpgNextTitle());
+                h.tvEpgNext.setVisibility(View.VISIBLE);
+            } else {
+                h.tvEpgNext.setVisibility(View.GONE);
+            }
+
+        } else {
+            h.tvEpgTitle.setText(R.string.no_epg);
+            h.tvEpgTitle.setVisibility(View.VISIBLE);
+            h.layoutNowTime.setVisibility(View.GONE);
+            h.pbEpg.setVisibility(View.GONE);
+            h.tvEpgNext.setVisibility(View.GONE);
+        }
+
+        h.itemView.setOnClickListener(v -> listener.onClick(ch));
     }
 
     @Override
-    public int getItemCount() { return items.size(); }
+    public int getItemCount() { return items == null ? 0 : items.size(); }
 
     static class VH extends RecyclerView.ViewHolder {
         ImageView ivLogo;
-        TextView tvName, tvEpg, tvTime;
+        TextView tvName, tvEpgTitle, tvEpgTime, tvEpgNext;
+        View layoutNowTime;
+        ProgressBar pbEpg;
+
         VH(View v) {
             super(v);
-            ivLogo = v.findViewById(R.id.ivChannelLogo);
-            tvName = v.findViewById(R.id.tvChannelName);
-            tvEpg = v.findViewById(R.id.tvEpgTitle);
-            tvTime = v.findViewById(R.id.tvEpgTime);
+            ivLogo        = v.findViewById(R.id.ivChannelLogo);
+            tvName        = v.findViewById(R.id.tvChannelName);
+            tvEpgTitle    = v.findViewById(R.id.tvEpgTitle);
+            tvEpgTime     = v.findViewById(R.id.tvEpgTime);
+            tvEpgNext     = v.findViewById(R.id.tvEpgNext);
+            layoutNowTime = v.findViewById(R.id.layoutNowTime);
+            pbEpg         = v.findViewById(R.id.pbEpg);
         }
     }
 }

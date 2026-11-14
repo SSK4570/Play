@@ -13,9 +13,11 @@ import java.util.List;
 public class AppPrefs {
 
     private static final String PREFS_NAME = "nex_player_prefs";
-    private static final String KEY_PROVIDERS = "providers";
+    private static final String KEY_PROVIDERS       = "providers";
     private static final String KEY_ACTIVE_PROVIDER = "active_provider_id";
-    private static final String KEY_FROM_CACHE = "from_cache";
+    private static final String KEY_FROM_CACHE      = "from_cache";
+    private static final String KEY_RECENT_CHANNELS = "recent_channels";
+    private static final int    MAX_RECENT          = 30;
 
     private final SharedPreferences prefs;
     private final Gson gson;
@@ -94,5 +96,26 @@ public class AppPrefs {
 
     public void setFromCache(boolean fromCache) {
         prefs.edit().putBoolean(KEY_FROM_CACHE, fromCache).apply();
+    }
+
+    public List<String> getRecentChannelNames() {
+        String json = prefs.getString(KEY_RECENT_CHANNELS, null);
+        if (json == null) return new ArrayList<>();
+        Type type = new TypeToken<List<String>>() {}.getType();
+        try {
+            List<String> list = gson.fromJson(json, type);
+            return list != null ? list : new ArrayList<>();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public void addRecentChannel(String name) {
+        if (name == null || name.isEmpty()) return;
+        List<String> recent = getRecentChannelNames();
+        recent.remove(name);          // remove if already present
+        recent.add(0, name);          // add to front
+        if (recent.size() > MAX_RECENT) recent = recent.subList(0, MAX_RECENT);
+        prefs.edit().putString(KEY_RECENT_CHANNELS, gson.toJson(recent)).apply();
     }
 }
