@@ -1,12 +1,13 @@
 package com.nex.player.ssk.player;
 
 import android.app.PictureInPictureParams;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
+import android.util.Log;
 import android.util.Rational;
 import android.view.MotionEvent;
 import android.view.View;
@@ -30,11 +31,13 @@ import androidx.media3.exoplayer.drm.HttpMediaDrmCallback;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
+import androidx.media3.ui.AspectRatioFrameLayout;
 import androidx.media3.ui.PlayerView;
 
 import com.nex.player.ssk.R;
 import com.nex.player.ssk.utils.Channel;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -44,15 +47,16 @@ import java.util.Map;
 @OptIn(markerClass = UnstableApi.class)
 public class PlayerActivity extends AppCompatActivity {
 
+    private static final String TAG = "PlayerActivity";
     public static final String EXTRA_CHANNEL = "channel";
 
-    private ExoPlayer  player;
-    private PlayerView playerView;
+    private ExoPlayer   player;
+    private PlayerView  playerView;
     private ProgressBar pbBuffering, epgProgress;
-    private View controlsOverlay, errorOverlay;
-    private TextView tvError, tvChannelNamePlayer, tvBitrate, tvHdBadge;
-    private TextView tvChannelNameEpg, tvHdBadgeEpg, tvBitrateEpg;
-    private TextView tvEpgTitlePlayer, tvCurrentTime;
+    private View        controlsOverlay, errorOverlay;
+    private TextView    tvError, tvChannelNamePlayer, tvBitrate, tvHdBadge;
+    private TextView    tvChannelNameEpg, tvHdBadgeEpg, tvBitrateEpg;
+    private TextView    tvEpgTitlePlayer, tvCurrentTime;
 
     private Channel channel;
     private boolean controlsVisible = false;
@@ -77,10 +81,8 @@ public class PlayerActivity extends AppCompatActivity {
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
         setContentView(R.layout.activity_player);
-
         channel = (Channel) getIntent().getSerializableExtra(EXTRA_CHANNEL);
         if (channel == null) { finish(); return; }
-
         initViews();
         setupChannel();
         initPlayer();
@@ -94,12 +96,11 @@ public class PlayerActivity extends AppCompatActivity {
         handler.removeCallbacksAndMessages(null);
         if (player != null) { player.release(); player = null; }
     }
-
     private boolean isPip() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode();
     }
 
-    // ── Init ────────────────────────────────────────────────────────────────
+    // ── Views ───────────────────────────────────────────────────────────────
 
     private void initViews() {
         playerView           = findViewById(R.id.playerView);
@@ -121,7 +122,6 @@ public class PlayerActivity extends AppCompatActivity {
             if (e.getAction() == MotionEvent.ACTION_UP) toggleControls();
             return true;
         });
-
         findViewById(R.id.btnBack).setOnClickListener(v -> onBackPressed());
         findViewById(R.id.btnPip).setOnClickListener(v -> enterPip());
         findViewById(R.id.btnAspect).setOnClickListener(v -> cycleAspectRatio());
@@ -143,106 +143,202 @@ public class PlayerActivity extends AppCompatActivity {
         }
     }
 
-    // ── Player ──────────────────────────────────────────────────────────────
+    // ── Player init ─────────────────────────────────────────────────────────
 
     private void initPlayer() {
-        // Build HTTP headers
-        Map<String, String> headers = buildHeaders();
+        String url     = channel.getUrl();
+        String ua      = channel.getUserAgent();
+        String referer = channel.getReferer();
+        String origin  = channel.getOrigin();
+        String cookie  = channel.getCookie();
+        String drmUrl  = channel.getDrmLicenseUrl();
+        String drmKeys = channel.getDrmKeys();
 
-        // HTTP datasource factory with all custom headers
+        // If cookie is embedded in URL as a query param, strip it and move to header
+        // e.g. https://host/live/index.mpd?__hdnea__=st=...~exp=...~acl=...
+        // We keep the full URL intact (CDN auth token is part of the URL path/query)
+        // and ALSO set it as Cookie header
+        if (cookie == null || cookie.isEmpty()) {
+            String extracted = extractTokenFromUrl(url);
+            if (extracted != null) cookie = extracted;
+        }
+
+        // Build the HTTP headers map
+        Map<String, String> headers = new HashMap<>();
+        // User-Agent: set default if none provided
+        String userAgent = (ua != null && !ua.isEmpty()) ? ua
+                : "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 "
+                + "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
+        headers.put("User-Agent", userAgent);
+        if (notEmpty(referer)) headers.put("Referer", referer);
+        if (notEmpty(origin))  headers.put("Origin",  origin);
+        if (notEmpty(cookie))  headers.put("Cookie",  cookie);
+
+        Log.d(TAG, "Playing URL: " + url);
+        Log.d(TAG, "Headers: " + headers);
+        if (notEmpty(drmKeys)) Log.d(TAG, "DRM Keys: " + drmKeys);
+        if (notEmpty(drmUrl))  Log.d(TAG, "DRM URL: " + drmUrl);
+
+        // ── DataSource factory with all headers ──────────────────────────────
         DefaultHttpDataSource.Factory httpFactory = new DefaultHttpDataSource.Factory()
+                .setUserAgent(userAgent)
+                .setDefaultRequestProperties(headers)
                 .setConnectTimeoutMs(15_000)
                 .setReadTimeoutMs(20_000)
                 .setAllowCrossProtocolRedirects(true);
 
-        if (channel.getUserAgent() != null && !channel.getUserAgent().isEmpty()) {
-            httpFactory.setUserAgent(channel.getUserAgent());
-        }
-        if (!headers.isEmpty()) {
-            httpFactory.setDefaultRequestProperties(headers);
+        // Same factory for DRM license requests (needs same UA / Cookie)
+        DefaultHttpDataSource.Factory drmHttpFactory = new DefaultHttpDataSource.Factory()
+                .setUserAgent(userAgent)
+                .setDefaultRequestProperties(headers)
+                .setConnectTimeoutMs(15_000)
+                .setReadTimeoutMs(20_000)
+                .setAllowCrossProtocolRedirects(true);
+
+        // ── DRM detection ────────────────────────────────────────────────────
+        boolean hasClearKey = notEmpty(drmKeys) && !drmKeys.startsWith("http");
+        boolean hasWidevine = notEmpty(drmUrl)  || (notEmpty(drmKeys) && drmKeys.startsWith("http"));
+
+        // If drmKeys is a URL (some playlists put Widevine URL in license_key)
+        if (notEmpty(drmKeys) && drmKeys.startsWith("http")) {
+            drmUrl  = drmKeys;
+            drmKeys = null;
+            hasClearKey = false;
+            hasWidevine = true;
         }
 
-        // Faster load control: shorter buffers for live TV
+        // ── Load control: fast start for live TV ─────────────────────────────
         DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
-                .setBufferDurationsMs(
-                        3_000,   // min buffer before playback starts
-                        15_000,  // max buffer
-                        1_500,   // buffer after rebuffer
-                        2_000)   // buffer before playback resumes
+                .setBufferDurationsMs(2_000, 15_000, 1_000, 2_000)
                 .build();
 
         DefaultTrackSelector trackSelector =
                 new DefaultTrackSelector(this, new AdaptiveTrackSelection.Factory());
+        trackSelector.setParameters(trackSelector.buildUponParameters()
+                .setMaxVideoSizeSd()   // start with SD, upgrade if bandwidth allows
+                .build());
 
         ExoPlayer.Builder builder = new ExoPlayer.Builder(this)
                 .setTrackSelector(trackSelector)
                 .setLoadControl(loadControl);
 
-        String drmUrl  = channel.getDrmLicenseUrl();
-        String drmKeys = channel.getDrmKeys();
-
-        // Determine DRM type:
-        // 1. drmKeys present (hex KEY:IV pairs)  → ClearKey
-        // 2. drmUrl present (https://...)         → Widevine
-        boolean hasClearKey = notEmpty(drmKeys) && !drmKeys.startsWith("http");
-        boolean hasWidevine = notEmpty(drmUrl);
-
+        // ── Configure DRM session manager on builder ──────────────────────────
         if (hasClearKey) {
-            // ClearKey: ExoPlayer handles data: URIs natively — just pass the URI in MediaItem
-            // No custom DrmSessionManager needed; use default media source factory
-            builder.setMediaSourceFactory(
-                    new DefaultMediaSourceFactory(this).setDataSourceFactory(httpFactory));
+            // ClearKey: build inline JSON license as data: URI
+            Uri ckLicenseUri = buildClearKeyDataUri(drmKeys);
+            Log.d(TAG, "ClearKey URI: " + ckLicenseUri);
+            // ExoPlayer ClearKey uses a local MediaDrm — no HTTP needed for license
+            // But we still need a DrmSessionManager so the MediaSource handles encryption
+            DefaultDrmSessionManager ckManager = new DefaultDrmSessionManager.Builder()
+                    .setUuidAndExoMediaDrmProvider(C.CLEARKEY_UUID,
+                            FrameworkMediaDrm.DEFAULT_PROVIDER)
+                    .setMultiSession(false)
+                    .build(new LocalClearKeyCallback(ckLicenseUri.toString()));
+            builder.setMediaSourceFactory(new DefaultMediaSourceFactory(this)
+                    .setDataSourceFactory(httpFactory)
+                    .setDrmSessionManagerProvider(unused -> ckManager));
+
         } else if (hasWidevine) {
-            // Widevine: standard HTTPS license server
-            HttpMediaDrmCallback wvCallback = new HttpMediaDrmCallback(drmUrl, httpFactory);
+            final String finalDrmUrl = drmUrl;
+            HttpMediaDrmCallback wvCallback =
+                    new HttpMediaDrmCallback(finalDrmUrl, drmHttpFactory);
             DefaultDrmSessionManager wvManager = new DefaultDrmSessionManager.Builder()
-                    .setUuidAndExoMediaDrmProvider(C.WIDEVINE_UUID, FrameworkMediaDrm.DEFAULT_PROVIDER)
+                    .setUuidAndExoMediaDrmProvider(C.WIDEVINE_UUID,
+                            FrameworkMediaDrm.DEFAULT_PROVIDER)
+                    .setMultiSession(false)
                     .build(wvCallback);
-            builder.setMediaSourceFactory(
-                    new DefaultMediaSourceFactory(this)
-                            .setDataSourceFactory(httpFactory)
-                            .setDrmSessionManagerProvider(mp -> wvManager));
+            builder.setMediaSourceFactory(new DefaultMediaSourceFactory(this)
+                    .setDataSourceFactory(httpFactory)
+                    .setDrmSessionManagerProvider(unused -> wvManager));
+
         } else {
-            builder.setMediaSourceFactory(
-                    new DefaultMediaSourceFactory(this).setDataSourceFactory(httpFactory));
+            builder.setMediaSourceFactory(new DefaultMediaSourceFactory(this)
+                    .setDataSourceFactory(httpFactory));
         }
 
         player = builder.build();
         playerView.setPlayer(player);
         playerView.setUseController(false);
 
-        // Build MediaItem with DRM config
-        MediaItem.Builder miBuilder = new MediaItem.Builder().setUri(Uri.parse(channel.getUrl()));
+        // ── MediaItem with DRM config ─────────────────────────────────────────
+        MediaItem.Builder mi = new MediaItem.Builder().setUri(Uri.parse(url));
 
         if (hasClearKey) {
-            miBuilder.setDrmConfiguration(
-                    new MediaItem.DrmConfiguration.Builder(C.CLEARKEY_UUID)
-                            .setLicenseUri(buildClearKeyDataUri(drmKeys))
-                            .setMultiSession(false)
-                            .build());
+            mi.setDrmConfiguration(new MediaItem.DrmConfiguration.Builder(C.CLEARKEY_UUID)
+                    .setLicenseUri(buildClearKeyDataUri(drmKeys))
+                    .setMultiSession(false)
+                    .build());
         } else if (hasWidevine) {
-            miBuilder.setDrmConfiguration(
-                    new MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
-                            .setLicenseUri(drmUrl)
-                            .build());
+            mi.setDrmConfiguration(new MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
+                    .setLicenseUri(drmUrl)
+                    .build());
         }
 
-        player.setMediaItem(miBuilder.build());
+        player.setMediaItem(mi.build());
         player.prepare();
         player.setPlayWhenReady(true);
 
         player.addListener(new Player.Listener() {
             @Override public void onPlaybackStateChanged(int state) {
-                pbBuffering.setVisibility(state == Player.STATE_BUFFERING ? View.VISIBLE : View.GONE);
-                if (state == Player.STATE_READY) updateBitrateInfo();
+                pbBuffering.setVisibility(state == Player.STATE_BUFFERING
+                        ? View.VISIBLE : View.GONE);
+                if (state == Player.STATE_READY) {
+                    errorOverlay.setVisibility(View.GONE);
+                    updateBitrateInfo();
+                }
             }
             @Override public void onPlayerError(PlaybackException error) {
                 pbBuffering.setVisibility(View.GONE);
-                tvError.setText("Error: " + error.getMessage());
+                Log.e(TAG, "Player error: " + error.getMessage(), error);
+                String msg = friendlyError(error);
+                tvError.setText(msg);
                 errorOverlay.setVisibility(View.VISIBLE);
             }
         });
     }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /**
+     * Extract an auth token from the URL query string (hdnea, hdntl, token, etc.)
+     * and return it as a cookie string "name=value".
+     */
+    private static String extractTokenFromUrl(String url) {
+        if (url == null || !url.contains("?")) return null;
+        String query = url.substring(url.indexOf('?') + 1);
+        // Look for known CDN token param names
+        for (String param : new String[]{"__hdnea__", "__hdntl__", "hdnea", "hdntl", "token", "auth"}) {
+            int idx = query.indexOf(param + "=");
+            if (idx >= 0) {
+                String val = query.substring(idx);
+                // Cut at next & if present
+                int end = val.indexOf('&');
+                return end >= 0 ? val.substring(0, end) : val;
+            }
+        }
+        return null;
+    }
+
+    private static String friendlyError(PlaybackException e) {
+        int code = e.errorCode;
+        if (code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED)
+            return "Network connection failed.\nCheck your internet connection.";
+        if (code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT)
+            return "Connection timed out.\nServer may be offline.";
+        if (code == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS)
+            return "Server returned an error (HTTP " + code + ").\nStream may be expired or unavailable.";
+        if (code == PlaybackException.ERROR_CODE_DRM_NO_LICENSE)
+            return "DRM license could not be obtained.\nCheck DRM keys or license URL.";
+        if (code == PlaybackException.ERROR_CODE_DRM_LICENSE_EXPIRED)
+            return "DRM license has expired.";
+        if (code == PlaybackException.ERROR_CODE_DRM_SYSTEM_ERROR)
+            return "DRM system error. Device may not support this stream.";
+        if (code == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED)
+            return "Playlist/manifest is malformed or unsupported.";
+        return "Playback error.\n" + e.getMessage();
+    }
+
+    private static boolean notEmpty(String s) { return s != null && !s.isEmpty(); }
 
     private Map<String, String> buildHeaders() {
         Map<String, String> h = new HashMap<>();
@@ -253,75 +349,90 @@ public class PlayerActivity extends AppCompatActivity {
         return h;
     }
 
-    private static boolean notEmpty(String s) { return s != null && !s.isEmpty(); }
+    // ── ClearKey helpers ──────────────────────────────────────────────────────
 
     /**
-     * Build a ClearKey JSON data URI from hex KEY:IV pair(s).
+     * Build ClearKey JSON as a data: URI for ExoPlayer.
      *
-     * Input formats accepted:
-     *   "ae3d3b12ab0f5dada0f2423d1cc7b403:4577d96a74683b0c261cc5c0e30af011"
-     *   "key1hex:iv1hex,key2hex:iv2hex"
+     * Input: "KID_hex:KEY_hex" or "KID1:KEY1,KID2:KEY2,..."
+     * Output: data:application/json;base64,<ClearKey JSON base64>
      *
-     * ClearKey JSON spec (RFC 8188 / W3C):
-     *   { "keys": [ { "kty":"oct", "k":"<base64url key>", "kid":"<base64url kid>" } ],
-     *     "type": "temporary" }
-     *
-     * ExoPlayer's ClearKey implementation expects the data: URI to contain
-     * this JSON so it can respond to the DRM session's license request locally.
+     * The JSON format (W3C ClearKey):
+     *   {"keys":[{"kty":"oct","k":"<KEY_base64url>","kid":"<KID_base64url>"}],"type":"temporary"}
      */
     private static Uri buildClearKeyDataUri(String keys) {
+        if (keys == null || keys.isEmpty()) return null;
         StringBuilder sb = new StringBuilder("{\"keys\":[");
-        String[] pairs = keys.split(",");
         boolean first = true;
-        for (String pair : pairs) {
-            String trimmed = pair.trim();
-            if (trimmed.isEmpty()) continue;
-            // Split on first colon only (IV/key may contain colons in edge cases)
-            int colon = trimmed.indexOf(':');
+        for (String pair : keys.split(",")) {
+            pair = pair.trim();
+            if (pair.isEmpty()) continue;
+            int colon = pair.indexOf(':');
             if (colon < 1) continue;
-            String kidHex = trimmed.substring(0, colon).trim();
-            String keyHex = trimmed.substring(colon + 1).trim();
-            if (kidHex.isEmpty() || keyHex.isEmpty()) continue;
+            String kidHex = pair.substring(0, colon).trim();
+            String keyHex = pair.substring(colon + 1).trim();
             String kidB64 = hexToBase64Url(kidHex);
             String keyB64 = hexToBase64Url(keyHex);
             if (kidB64 == null || keyB64 == null) continue;
-            if (!first) sb.append(",");
+            if (!first) sb.append(',');
             first = false;
-            sb.append("{\"kty\":\"oct\",")
-              .append("\"k\":\"").append(keyB64).append("\",")
-              .append("\"kid\":\"").append(kidB64).append("\"}");
+            sb.append("{\"kty\":\"oct\",\"k\":\"").append(keyB64)
+              .append("\",\"kid\":\"").append(kidB64).append("\"}");
         }
         sb.append("],\"type\":\"temporary\"}");
-        byte[] jsonBytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        String b64 = android.util.Base64.encodeToString(jsonBytes, android.util.Base64.NO_WRAP);
-        return Uri.parse("data:application/json;base64," + b64);
+        byte[] json = sb.toString().getBytes(StandardCharsets.UTF_8);
+        return Uri.parse("data:application/json;base64,"
+                + Base64.encodeToString(json, Base64.NO_WRAP));
     }
 
-    /** Convert a hex string to base64url (no padding) as required by ClearKey JSON. */
     private static String hexToBase64Url(String hex) {
         try {
-            int len = hex.length();
-            if (len % 2 != 0) hex = "0" + hex; // pad odd-length hex
+            if (hex.length() % 2 != 0) hex = "0" + hex;
             byte[] bytes = new byte[hex.length() / 2];
-            for (int i = 0; i < bytes.length; i++) {
+            for (int i = 0; i < bytes.length; i++)
                 bytes[i] = (byte) Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
-            }
-            // Base64url: use URL_SAFE flag + strip '=' padding
-            return android.util.Base64
-                    .encodeToString(bytes, android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP)
-                    .replace("=", "");
+            return Base64.encodeToString(bytes, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
         } catch (Exception e) {
-            android.util.Log.e("PlayerActivity", "hexToBase64Url failed for: " + hex, e);
+            Log.e(TAG, "hexToBase64Url failed: " + hex);
             return null;
         }
     }
 
-    private void retryPlay() {
-        errorOverlay.setVisibility(View.GONE);
-        if (player != null) { player.prepare(); player.play(); }
+    /**
+     * A MediaDrmCallback that serves a pre-built ClearKey JSON response locally,
+     * without any network request. This avoids ExoPlayer trying to POST to a
+     * data: URI and getting a network error.
+     */
+    private static class LocalClearKeyCallback implements androidx.media3.exoplayer.drm.MediaDrmCallback {
+        private final byte[] licenseResponse;
+
+        LocalClearKeyCallback(String dataUri) {
+            // dataUri is "data:application/json;base64,<b64>" — decode the JSON bytes
+            byte[] decoded;
+            try {
+                String b64 = dataUri.substring(dataUri.indexOf(',') + 1);
+                decoded = Base64.decode(b64, Base64.NO_WRAP);
+            } catch (Exception e) {
+                decoded = "{}".getBytes(StandardCharsets.UTF_8);
+            }
+            licenseResponse = decoded;
+        }
+
+        @Override
+        public byte[] executeProvisionRequest(java.util.UUID uuid,
+                androidx.media3.exoplayer.drm.ExoMediaDrm.ProvisionRequest request) {
+            return new byte[0];
+        }
+
+        @Override
+        public byte[] executeKeyRequest(java.util.UUID uuid,
+                androidx.media3.exoplayer.drm.ExoMediaDrm.KeyRequest request) {
+            // Return the ClearKey JSON directly — no network needed
+            return licenseResponse;
+        }
     }
 
-    // ── Controls ────────────────────────────────────────────────────────────
+    // ── Controls ─────────────────────────────────────────────────────────────
 
     private void toggleControls() {
         if (controlsVisible) hideControlsOverlay(); else showControlsOverlay();
@@ -339,52 +450,54 @@ public class PlayerActivity extends AppCompatActivity {
         controlsOverlay.setVisibility(View.GONE);
     }
 
+    private void retryPlay() {
+        errorOverlay.setVisibility(View.GONE);
+        if (player != null) { player.prepare(); player.play(); }
+    }
+
     private void updateBitrateInfo() {
         if (player == null) return;
         long bps = player.getVideoFormat() != null ? player.getVideoFormat().bitrate : -1;
         if (bps > 0) {
             String br = bps >= 1_000_000
                     ? String.format(Locale.US, "%.1f Mbps", bps / 1_000_000.0)
-                    : String.format(Locale.US, "%d Kbps", bps / 1000);
+                    : String.format(Locale.US, "%d Kbps", bps / 1_000);
             tvBitrate.setText(br);
-            tvBitrateEpg.setText(br);
+            if (tvBitrateEpg != null) tvBitrateEpg.setText(br);
         }
     }
 
     private void updateCurrentTime() {
-        tvCurrentTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()));
+        if (tvCurrentTime != null)
+            tvCurrentTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date()));
     }
 
     private void cycleAspectRatio() {
         int mode = playerView.getResizeMode();
-        if (mode == androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT)
-            playerView.setResizeMode(androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL);
-        else if (mode == androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL)
-            playerView.setResizeMode(androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
-        else
-            playerView.setResizeMode(androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT);
+        if      (mode == AspectRatioFrameLayout.RESIZE_MODE_FIT)  playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
+        else if (mode == AspectRatioFrameLayout.RESIZE_MODE_FILL) playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
+        else                                                       playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
     }
 
     private void enterPip() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             enterPictureInPictureMode(
                     new PictureInPictureParams.Builder().setAspectRatio(new Rational(16, 9)).build());
-        }
     }
 
     private void showStreamInfo() {
         StringBuilder sb = new StringBuilder();
-        sb.append("URL: ").append(channel.getUrl()).append("\n\n");
-        if (notEmpty(channel.getUserAgent())) sb.append("User-Agent: ").append(channel.getUserAgent()).append("\n");
-        if (notEmpty(channel.getReferer()))   sb.append("Referer: ").append(channel.getReferer()).append("\n");
-        if (notEmpty(channel.getOrigin()))    sb.append("Origin: ").append(channel.getOrigin()).append("\n");
-        if (notEmpty(channel.getCookie()))    sb.append("Cookie: ").append(channel.getCookie()).append("\n");
-        if (notEmpty(channel.getDrmLicenseUrl())) sb.append("DRM URL: ").append(channel.getDrmLicenseUrl()).append("\n");
-        if (notEmpty(channel.getDrmKeys()))   sb.append("DRM Keys: ").append(channel.getDrmKeys()).append("\n");
+        sb.append("URL:\n").append(channel.getUrl()).append("\n\n");
+        if (notEmpty(channel.getUserAgent())) sb.append("User-Agent:\n").append(channel.getUserAgent()).append("\n\n");
+        if (notEmpty(channel.getReferer()))   sb.append("Referer:\n").append(channel.getReferer()).append("\n\n");
+        if (notEmpty(channel.getOrigin()))    sb.append("Origin:\n").append(channel.getOrigin()).append("\n\n");
+        if (notEmpty(channel.getCookie()))    sb.append("Cookie:\n").append(channel.getCookie()).append("\n\n");
+        if (notEmpty(channel.getDrmLicenseUrl())) sb.append("DRM License URL:\n").append(channel.getDrmLicenseUrl()).append("\n\n");
+        if (notEmpty(channel.getDrmKeys()))   sb.append("DRM Keys:\n").append(channel.getDrmKeys());
 
         new androidx.appcompat.app.AlertDialog.Builder(this, R.style.NexDialog)
                 .setTitle(channel.getName())
-                .setMessage(sb.toString())
+                .setMessage(sb.toString().trim())
                 .setPositiveButton("OK", null)
                 .show();
     }
@@ -392,6 +505,7 @@ public class PlayerActivity extends AppCompatActivity {
     @Override
     public void onPictureInPictureModeChanged(boolean inPip) {
         super.onPictureInPictureModeChanged(inPip);
-        controlsOverlay.setVisibility(inPip ? View.GONE : View.VISIBLE);
+        if (controlsOverlay != null)
+            controlsOverlay.setVisibility(inPip ? View.GONE : View.VISIBLE);
     }
 }
