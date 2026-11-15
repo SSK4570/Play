@@ -4,54 +4,47 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="14dp"
-    android:layout_marginEnd="14dp"
-    android:layout_marginTop="5dp"
-    android:layout_marginBottom="5dp"
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
     android:foreground="?attr/selectableItemBackground"
-    app:cardCornerRadius="16dp"
-    app:cardBackgroundColor="#161616"
+    app:cardCornerRadius="12dp"
+    app:cardBackgroundColor="#181818"
     app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="82dp"
+        android:layout_height="80dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
-        <!-- Icon box with rounded corners, dark bg -->
-        <FrameLayout
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:background="@drawable/bg_group_icon">
+        <!-- Plain icon, no box background -->
+        <ImageView
+            android:id="@+id/ivGroupIcon"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/ic_tv"
+            android:tint="#CCCCCC"
+            android:scaleType="fitCenter"/>
 
-            <ImageView
-                android:id="@+id/ivGroupIcon"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_tv"
-                android:tint="#CCCCCC"/>
-        </FrameLayout>
-
-        <!-- Name -->
+        <!-- Group name -->
         <TextView
             android:id="@+id/tvGroupName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:letterSpacing="0.01"
+            android:textSize="16sp"
             android:fontFamily="sans-serif-medium"
             android:ellipsize="end"
-            android:maxLines="2"
-            android:paddingStart="16dp"
+            android:maxLines="1"
+            android:paddingStart="18dp"
             android:paddingEnd="8dp"/>
 
-        <!-- Count + label stacked -->
+        <!-- Count: big red number + small grey "channels" -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -62,7 +55,7 @@
                 android:id="@+id/tvChannelCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/colorPrimary"
+                android:textColor="#CC0000"
                 android:textSize="22sp"
                 android:fontFamily="sans-serif-medium"
                 android:text="0"/>
@@ -72,14 +65,13 @@
                 android:layout_height="wrap_content"
                 android:textColor="#666666"
                 android:textSize="10sp"
-                android:letterSpacing="0.05"
                 android:text="channels"/>
         </LinearLayout>
 
         <!-- Chevron -->
         <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
             android:src="@drawable/ic_chevron_right"
             android:tint="#444444"
             android:layout_marginStart="10dp"/>

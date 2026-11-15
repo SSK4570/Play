@@ -321,20 +321,24 @@ public class PlayerActivity extends AppCompatActivity {
 
     private static String friendlyError(PlaybackException e) {
         int code = e.errorCode;
-        if (code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED)
-            return "Network connection failed.\nCheck your internet connection.";
-        if (code == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT)
-            return "Connection timed out.\nServer may be offline.";
-        if (code == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS)
-            return "Server returned an error (HTTP " + code + ").\nStream may be expired or unavailable.";
-        if (code == PlaybackException.ERROR_CODE_DRM_NO_LICENSE)
-            return "DRM license could not be obtained.\nCheck DRM keys or license URL.";
-        if (code == PlaybackException.ERROR_CODE_DRM_LICENSE_EXPIRED)
-            return "DRM license has expired.";
-        if (code == PlaybackException.ERROR_CODE_DRM_SYSTEM_ERROR)
-            return "DRM system error. Device may not support this stream.";
-        if (code == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED)
-            return "Playlist/manifest is malformed or unsupported.";
+        // Use numeric constants — compatible with all media3 versions
+        // 2001 = ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+        // 2002 = ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+        // 2003 = ERROR_CODE_IO_BAD_HTTP_STATUS
+        // 6001 = ERROR_CODE_DRM_SCHEME_UNSUPPORTED
+        // 6002 = ERROR_CODE_DRM_PROVISIONING_FAILED
+        // 6004 = ERROR_CODE_DRM_CONTENT_ERROR
+        // 6005 = ERROR_CODE_DRM_LICENSE_ACQUISITION_FAILED
+        // 6006 = ERROR_CODE_DRM_DISALLOWED_OPERATION
+        // 6007 = ERROR_CODE_DRM_SYSTEM_ERROR
+        // 6008 = ERROR_CODE_DRM_DEVICE_REVOKED
+        // 6009 = ERROR_CODE_DRM_LICENSE_EXPIRED
+        // 4001 = ERROR_CODE_PARSING_MANIFEST_MALFORMED
+        if (code == 2001) return "Network connection failed.\nCheck your internet.";
+        if (code == 2002) return "Connection timed out.\nServer may be offline.";
+        if (code == 2003) return "Server error (HTTP). Stream may be expired.";
+        if (code >= 6001 && code <= 6009) return "DRM error (code " + code + ").\nCheck keys or license URL.";
+        if (code == 4001) return "Playlist/manifest is malformed or unsupported.";
         return "Playback error.\n" + e.getMessage();
     }
 

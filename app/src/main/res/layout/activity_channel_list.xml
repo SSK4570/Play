@@ -6,87 +6,69 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- Premium Toolbar -->
+    <!-- Toolbar: exactly matches screenshot -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="#0D0000"
+        android:layout_height="58dp"
+        android:background="#0A0000"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="6dp"
-        android:paddingEnd="6dp"
-        android:elevation="6dp">
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp">
 
-        <!-- Search button -->
+        <!-- Search -->
         <ImageButton
             android:id="@+id/btnSearch"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@drawable/ic_search"
             android:tint="#AAAAAA"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Search"/>
+            android:background="?attr/selectableItemBackgroundBorderless"/>
 
-        <!-- Active Live tab -->
-        <LinearLayout
+        <!-- Active Live TV tab (red bg) -->
+        <FrameLayout
             android:id="@+id/btnLiveTab"
-            android:layout_width="wrap_content"
+            android:layout_width="52dp"
             android:layout_height="40dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:background="@drawable/bg_tab_active"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp">
+            android:background="@drawable/bg_tab_active">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
                 android:src="@drawable/ic_tv"
                 android:tint="#FFFFFF"/>
+        </FrameLayout>
 
-            <View android:layout_width="6dp" android:layout_height="1dp"/>
-        </LinearLayout>
-
-        <!-- App logo text in center -->
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="NEX PLAYER+"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:letterSpacing="0.1"
-            android:fontFamily="sans-serif-black"/>
+        <!-- Spacer -->
+        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
 
         <!-- Settings -->
         <ImageButton
             android:id="@+id/btnSettings"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@drawable/ic_settings"
             android:tint="#AAAAAA"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Settings"/>
+            android:background="?attr/selectableItemBackgroundBorderless"/>
 
         <!-- Power -->
         <ImageButton
             android:id="@+id/btnPower"
-            android:layout_width="46dp"
-            android:layout_height="46dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@drawable/ic_power"
             android:tint="#AAAAAA"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Exit"/>
+            android:background="?attr/selectableItemBackgroundBorderless"/>
 
     </LinearLayout>
 
-    <!-- Category header with back arrow -->
+    <!-- Category header breadcrumb with back arrow -->
     <LinearLayout
         android:id="@+id/tvCategoryHeader"
         android:layout_width="match_parent"
-        android:layout_height="42dp"
-        android:background="#1A0000"
+        android:layout_height="40dp"
+        android:background="#180000"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="8dp"
@@ -95,10 +77,10 @@
         android:foreground="?attr/selectableItemBackground">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:src="@drawable/ic_chevron_right"
-            android:tint="@color/colorPrimary"
+            android:tint="#CC0000"
             android:rotation="180"/>
 
         <TextView
@@ -106,22 +88,21 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/colorPrimary"
+            android:textColor="#CC0000"
             android:textSize="13sp"
             android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.02"
             android:paddingStart="8dp"
             android:ellipsize="end"
             android:maxLines="1"/>
 
     </LinearLayout>
 
-    <!-- Search bar -->
+    <!-- Search bar (hidden by default) -->
     <LinearLayout
         android:id="@+id/searchBar"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="#0A0A0A"
+        android:layout_height="48dp"
+        android:background="#0F0F0F"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="14dp"
@@ -132,7 +113,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:src="@drawable/ic_search"
-            android:tint="#666666"/>
+            android:tint="#555555"/>
 
         <EditText
             android:id="@+id/etSearch"
@@ -150,14 +131,14 @@
 
     </LinearLayout>
 
-    <!-- Thin red progress indicator -->
+    <!-- Loading bar -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="match_parent"
         android:layout_height="2dp"
         style="?android:attr/progressBarStyleHorizontal"
         android:indeterminate="true"
-        android:indeterminateTint="@color/colorPrimary"
+        android:indeterminateTint="#CC0000"
         android:visibility="gone"/>
 
     <!-- Main content -->
@@ -171,8 +152,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingTop="6dp"
-            android:paddingBottom="80dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="8dp"
             android:scrollbars="none"/>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -182,7 +163,7 @@
             android:visibility="gone"
             android:clipToPadding="false"
             android:paddingTop="4dp"
-            android:paddingBottom="80dp"
+            android:paddingBottom="8dp"
             android:scrollbars="none"/>
 
         <!-- Empty state -->
@@ -195,8 +176,8 @@
             android:visibility="gone">
 
             <ImageView
-                android:layout_width="72dp"
-                android:layout_height="72dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:src="@drawable/ic_tv"
                 android:tint="#2A2A2A"/>
 
