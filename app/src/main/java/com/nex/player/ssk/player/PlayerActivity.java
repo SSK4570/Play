@@ -178,19 +178,30 @@ public class PlayerActivity extends AppCompatActivity {
                 .setTrackSelector(trackSelector)
                 .setLoadControl(loadControl);
 
-        // Widevine DRM
         String drmUrl  = channel.getDrmLicenseUrl();
         String drmKeys = channel.getDrmKeys();
 
-        if (drmUrl != null && !drmUrl.isEmpty()) {
-            HttpMediaDrmCallback drmCallback = new HttpMediaDrmCallback(drmUrl, httpFactory);
-            DefaultDrmSessionManager drmManager = new DefaultDrmSessionManager.Builder()
+        // Determine DRM type:
+        // 1. drmKeys present (hex KEY:IV pairs)  → ClearKey
+        // 2. drmUrl present (https://...)         → Widevine
+        boolean hasClearKey = notEmpty(drmKeys) && !drmKeys.startsWith("http");
+        boolean hasWidevine = notEmpty(drmUrl);
+
+        if (hasClearKey) {
+            // ClearKey: ExoPlayer handles data: URIs natively — just pass the URI in MediaItem
+            // No custom DrmSessionManager needed; use default media source factory
+            builder.setMediaSourceFactory(
+                    new DefaultMediaSourceFactory(this).setDataSourceFactory(httpFactory));
+        } else if (hasWidevine) {
+            // Widevine: standard HTTPS license server
+            HttpMediaDrmCallback wvCallback = new HttpMediaDrmCallback(drmUrl, httpFactory);
+            DefaultDrmSessionManager wvManager = new DefaultDrmSessionManager.Builder()
                     .setUuidAndExoMediaDrmProvider(C.WIDEVINE_UUID, FrameworkMediaDrm.DEFAULT_PROVIDER)
-                    .build(drmCallback);
+                    .build(wvCallback);
             builder.setMediaSourceFactory(
                     new DefaultMediaSourceFactory(this)
                             .setDataSourceFactory(httpFactory)
-                            .setDrmSessionManagerProvider(mp -> drmManager));
+                            .setDrmSessionManagerProvider(mp -> wvManager));
         } else {
             builder.setMediaSourceFactory(
                     new DefaultMediaSourceFactory(this).setDataSourceFactory(httpFactory));
@@ -198,18 +209,18 @@ public class PlayerActivity extends AppCompatActivity {
 
         player = builder.build();
         playerView.setPlayer(player);
-        playerView.setUseController(false); // use our own controls overlay
+        playerView.setUseController(false);
 
-        // Build MediaItem
+        // Build MediaItem with DRM config
         MediaItem.Builder miBuilder = new MediaItem.Builder().setUri(Uri.parse(channel.getUrl()));
 
-        if (drmKeys != null && !drmKeys.isEmpty() && !drmKeys.startsWith("http")) {
-            // ClearKey: "KEY:IV" or "KEY:IV,KEY2:IV2"
+        if (hasClearKey) {
             miBuilder.setDrmConfiguration(
                     new MediaItem.DrmConfiguration.Builder(C.CLEARKEY_UUID)
-                            .setLicenseUri(buildClearKeyUri(drmKeys))
+                            .setLicenseUri(buildClearKeyDataUri(drmKeys))
+                            .setMultiSession(false)
                             .build());
-        } else if (drmUrl != null && !drmUrl.isEmpty()) {
+        } else if (hasWidevine) {
             miBuilder.setDrmConfiguration(
                     new MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
                             .setLicenseUri(drmUrl)
@@ -244,25 +255,65 @@ public class PlayerActivity extends AppCompatActivity {
 
     private static boolean notEmpty(String s) { return s != null && !s.isEmpty(); }
 
-    /** Build a ClearKey JSON URI from "KEY:IV" or "KEY:IV,K2:V2" */
-    private static Uri buildClearKeyUri(String keys) {
+    /**
+     * Build a ClearKey JSON data URI from hex KEY:IV pair(s).
+     *
+     * Input formats accepted:
+     *   "ae3d3b12ab0f5dada0f2423d1cc7b403:4577d96a74683b0c261cc5c0e30af011"
+     *   "key1hex:iv1hex,key2hex:iv2hex"
+     *
+     * ClearKey JSON spec (RFC 8188 / W3C):
+     *   { "keys": [ { "kty":"oct", "k":"<base64url key>", "kid":"<base64url kid>" } ],
+     *     "type": "temporary" }
+     *
+     * ExoPlayer's ClearKey implementation expects the data: URI to contain
+     * this JSON so it can respond to the DRM session's license request locally.
+     */
+    private static Uri buildClearKeyDataUri(String keys) {
         StringBuilder sb = new StringBuilder("{\"keys\":[");
         String[] pairs = keys.split(",");
-        for (int i = 0; i < pairs.length; i++) {
-            String[] kv = pairs[i].trim().split(":");
-            if (kv.length == 2) {
-                if (i > 0) sb.append(",");
-                sb.append("{\"kty\":\"oct\",\"k\":\"")
-                  .append(kv[1].trim())
-                  .append("\",\"kid\":\"")
-                  .append(kv[0].trim())
-                  .append("\"}");
-            }
+        boolean first = true;
+        for (String pair : pairs) {
+            String trimmed = pair.trim();
+            if (trimmed.isEmpty()) continue;
+            // Split on first colon only (IV/key may contain colons in edge cases)
+            int colon = trimmed.indexOf(':');
+            if (colon < 1) continue;
+            String kidHex = trimmed.substring(0, colon).trim();
+            String keyHex = trimmed.substring(colon + 1).trim();
+            if (kidHex.isEmpty() || keyHex.isEmpty()) continue;
+            String kidB64 = hexToBase64Url(kidHex);
+            String keyB64 = hexToBase64Url(keyHex);
+            if (kidB64 == null || keyB64 == null) continue;
+            if (!first) sb.append(",");
+            first = false;
+            sb.append("{\"kty\":\"oct\",")
+              .append("\"k\":\"").append(keyB64).append("\",")
+              .append("\"kid\":\"").append(kidB64).append("\"}");
         }
         sb.append("],\"type\":\"temporary\"}");
-        return Uri.parse("data:application/json;base64,"
-                + android.util.Base64.encodeToString(
-                        sb.toString().getBytes(), android.util.Base64.NO_WRAP));
+        byte[] jsonBytes = sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        String b64 = android.util.Base64.encodeToString(jsonBytes, android.util.Base64.NO_WRAP);
+        return Uri.parse("data:application/json;base64," + b64);
+    }
+
+    /** Convert a hex string to base64url (no padding) as required by ClearKey JSON. */
+    private static String hexToBase64Url(String hex) {
+        try {
+            int len = hex.length();
+            if (len % 2 != 0) hex = "0" + hex; // pad odd-length hex
+            byte[] bytes = new byte[hex.length() / 2];
+            for (int i = 0; i < bytes.length; i++) {
+                bytes[i] = (byte) Integer.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+            }
+            // Base64url: use URL_SAFE flag + strip '=' padding
+            return android.util.Base64
+                    .encodeToString(bytes, android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP)
+                    .replace("=", "");
+        } catch (Exception e) {
+            android.util.Log.e("PlayerActivity", "hexToBase64Url failed for: " + hex, e);
+            return null;
+        }
     }
 
     private void retryPlay() {

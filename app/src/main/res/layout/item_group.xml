@@ -4,82 +4,85 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="12dp"
-    android:layout_marginEnd="12dp"
-    android:layout_marginTop="6dp"
-    android:layout_marginBottom="6dp"
+    android:layout_marginStart="14dp"
+    android:layout_marginEnd="14dp"
+    android:layout_marginTop="5dp"
+    android:layout_marginBottom="5dp"
     android:foreground="?attr/selectableItemBackground"
-    app:cardCornerRadius="14dp"
-    app:cardBackgroundColor="@color/bgCard"
-    app:cardElevation="2dp">
+    app:cardCornerRadius="16dp"
+    app:cardBackgroundColor="#161616"
+    app:cardElevation="0dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="82dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="16dp">
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp">
 
-        <!-- Icon box -->
+        <!-- Icon box with rounded corners, dark bg -->
         <FrameLayout
-            android:layout_width="52dp"
-            android:layout_height="52dp">
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:background="@drawable/bg_group_icon">
 
             <ImageView
                 android:id="@+id/ivGroupIcon"
-                android:layout_width="52dp"
-                android:layout_height="52dp"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
                 android:src="@drawable/ic_tv"
-                android:scaleType="fitCenter"
-                android:padding="10dp" />
+                android:tint="#CCCCCC"/>
         </FrameLayout>
 
-        <!-- Group name -->
+        <!-- Name -->
         <TextView
             android:id="@+id/tvGroupName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/textPrimary"
-            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:letterSpacing="0.01"
             android:fontFamily="sans-serif-medium"
             android:ellipsize="end"
             android:maxLines="2"
-            android:paddingStart="14dp"
-            android:paddingEnd="8dp" />
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"/>
 
-        <!-- Channel count -->
+        <!-- Count + label stacked -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="end">
+            android:gravity="center_horizontal">
 
             <TextView
                 android:id="@+id/tvChannelCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/colorPrimary"
-                android:textSize="20sp"
+                android:textSize="22sp"
                 android:fontFamily="sans-serif-medium"
-                android:text="0" />
+                android:text="0"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/textSecondary"
-                android:textSize="11sp"
-                android:text="channels" />
+                android:textColor="#666666"
+                android:textSize="10sp"
+                android:letterSpacing="0.05"
+                android:text="channels"/>
         </LinearLayout>
 
         <!-- Chevron -->
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:src="@drawable/ic_chevron_right"
-            android:tint="@color/textSecondary"
-            android:layout_marginStart="8dp" />
+            android:tint="#444444"
+            android:layout_marginStart="10dp"/>
 
     </LinearLayout>
 

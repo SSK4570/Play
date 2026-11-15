@@ -17,6 +17,14 @@ public class M3UParser {
 
     private static final String TAG = "M3UParser";
 
+    /** EPG URL extracted from the last parsed M3U header (#EXTM3U x-tvg-url="...") */
+    private static volatile String lastParsedEpgUrl = null;
+
+    public static String getLastParsedEpgUrl() { return lastParsedEpgUrl; }
+
+    private static final Pattern P_TVG_URL = Pattern.compile(
+            "x-tvg-url=\"([^\"]+)\"", Pattern.CASE_INSENSITIVE);
+
     // EXTINF attribute patterns
     private static final Pattern P_TVG_ID      = Pattern.compile("tvg-id=\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
     private static final Pattern P_TVG_NAME    = Pattern.compile("tvg-name=\"([^\"]*)\"", Pattern.CASE_INSENSITIVE);
@@ -71,6 +79,13 @@ public class M3UParser {
         while ((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.isEmpty()) continue;
+
+            if (line.startsWith("#EXTM3U")) {
+                // Extract EPG URL from header
+                Matcher tvgUrlMatcher = P_TVG_URL.matcher(line);
+                if (tvgUrlMatcher.find()) lastParsedEpgUrl = tvgUrlMatcher.group(1).trim();
+                continue;
+            }
 
             if (line.startsWith("#EXTINF:")) {
                 pending       = parseExtInf(line);

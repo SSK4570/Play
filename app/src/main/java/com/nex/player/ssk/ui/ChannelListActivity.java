@@ -21,6 +21,7 @@ import com.nex.player.ssk.player.PlayerActivity;
 import com.nex.player.ssk.provider.ChannelCache;
 import com.nex.player.ssk.utils.AppPrefs;
 import com.nex.player.ssk.utils.Channel;
+import com.nex.player.ssk.provider.EpgParser;
 import com.nex.player.ssk.utils.M3UParser;
 import com.nex.player.ssk.utils.Provider;
 
@@ -170,6 +171,8 @@ public class ChannelListActivity extends AppCompatActivity {
                     progressBar.setVisibility(View.GONE);
                     displayChannels(result);
                 });
+                // Load EPG in background after channels shown
+                loadEpgAsync(provider, channels);
             } catch (Exception e) {
                 handler.post(() -> {
                     progressBar.setVisibility(View.GONE);
@@ -177,6 +180,21 @@ public class ChannelListActivity extends AppCompatActivity {
                     showEmpty();
                 });
             }
+        });
+    }
+
+    private void loadEpgAsync(Provider provider, List<Channel> channels) {
+        // Priority: provider's saved EPG URL > x-tvg-url from M3U header
+        String epgUrl = provider.getEpgUrl();
+        if (epgUrl == null || epgUrl.isEmpty()) epgUrl = M3UParser.getLastParsedEpgUrl();
+        if (epgUrl == null || epgUrl.isEmpty()) return;
+        final String finalEpgUrl = epgUrl;
+        executor.execute(() -> {
+            EpgParser.applyEpg(finalEpgUrl, channels);
+            handler.post(() -> {
+                // Refresh the visible list after EPG applied
+                if (channelAdapter != null) channelAdapter.notifyDataSetChanged();
+            });
         });
     }
 

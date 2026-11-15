@@ -4,15 +4,16 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#CC0000" android:pathData="M0,0h108v108H0z"/>
-    <!-- TV icon -->
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M78,30H30c-3.3,0 -6,2.7 -6,6v30c0,3.3 2.7,6 6,6h15v6h18v-6h15c3.3,0 5.97,-2.7 5.97,-6L84,36C84,32.7 81.3,30 78,30zM78,66H30V36h48V66z"/>
-    <!-- N+ text -->
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M36,42v14l8,-14h4v14h-4V42L36,56h-4V42z"/>
+    <!-- Dark background circle -->
+    <path android:fillColor="#0D0000"
+        android:pathData="M54,54 m-54,0 a54,54 0 1,0 108,0 a54,54 0 1,0 -108,0"/>
+    <!-- Red outer ring -->
     <path android:fillColor="#CC0000"
-        android:pathData="M56,42h4v5l3,-5h5l-5,7 5,7h-5l-3,-5v5h-4z"/>
+        android:pathData="M54,54 m-50,0 a50,50 0 1,0 100,0 a50,50 0 1,0 -100,0 M54,54 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/>
+    <!-- N letter bold -->
     <path android:fillColor="#FFFFFF"
-        android:pathData="M72,47c1.1,0 2,0.9 2,2s-0.9,2 -2,2 -2,-0.9 -2,-2 0.9,-2 2,-2zM69,42h2v3l2,-3h2v2l-2,3v2l-2,3h-2l2,-3v-2l-2,-3V42z"/>
+        android:pathData="M24,30 L24,78 L32,78 L32,50 L48,78 L56,78 L56,30 L48,30 L48,58 L32,30 Z"/>
+    <!-- + symbol in red -->
+    <path android:fillColor="#FF4444"
+        android:pathData="M68,42 L68,52 L58,52 L58,58 L68,58 L68,68 L74,68 L74,58 L84,58 L84,52 L74,52 L74,42 Z"/>
 </vector>

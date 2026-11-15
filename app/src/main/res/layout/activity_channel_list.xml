@@ -4,63 +4,92 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bgDark">
+    android:background="#000000">
 
-    <!-- Toolbar -->
+    <!-- Premium Toolbar -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="@color/bgToolbar"
+        android:layout_height="60dp"
+        android:background="#0D0000"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:elevation="4dp">
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:elevation="6dp">
 
+        <!-- Search button -->
         <ImageButton
             android:id="@+id/btnSearch"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
             android:src="@drawable/ic_search"
-            android:tint="@color/iconTint"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+            android:tint="#AAAAAA"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Search"/>
 
-        <ImageButton
+        <!-- Active Live tab -->
+        <LinearLayout
             android:id="@+id/btnLiveTab"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@drawable/ic_tv"
-            android:tint="@color/iconTintActive"
-            android:background="@drawable/bg_toolbar_btn_active"
-            android:contentDescription="Live Stream" />
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_tab_active"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp">
 
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_tv"
+                android:tint="#FFFFFF"/>
+
+            <View android:layout_width="6dp" android:layout_height="1dp"/>
+        </LinearLayout>
+
+        <!-- App logo text in center -->
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="NEX PLAYER+"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:letterSpacing="0.1"
+            android:fontFamily="sans-serif-black"/>
+
+        <!-- Settings -->
         <ImageButton
             android:id="@+id/btnSettings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
             android:src="@drawable/ic_settings"
-            android:tint="@color/iconTint"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+            android:tint="#AAAAAA"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Settings"/>
 
+        <!-- Power -->
         <ImageButton
             android:id="@+id/btnPower"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="46dp"
+            android:layout_height="46dp"
             android:src="@drawable/ic_power"
-            android:tint="@color/iconTint"
-            android:background="?attr/selectableItemBackgroundBorderless" />
+            android:tint="#AAAAAA"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Exit"/>
 
     </LinearLayout>
 
-    <!-- Category header — tappable arrow back to group list -->
+    <!-- Category header with back arrow -->
     <LinearLayout
         android:id="@+id/tvCategoryHeader"
         android:layout_width="match_parent"
-        android:layout_height="44dp"
-        android:background="@color/bgCategoryHeader"
+        android:layout_height="42dp"
+        android:background="#1A0000"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
+        android:paddingStart="8dp"
         android:paddingEnd="12dp"
         android:visibility="gone"
         android:foreground="?attr/selectableItemBackground">
@@ -70,19 +99,20 @@
             android:layout_height="20dp"
             android:src="@drawable/ic_chevron_right"
             android:tint="@color/colorPrimary"
-            android:rotation="180" />
+            android:rotation="180"/>
 
         <TextView
             android:id="@+id/tvCategoryHeaderText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="@color/bgCategoryHeaderText"
-            android:textSize="14sp"
-            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.02"
             android:paddingStart="8dp"
             android:ellipsize="end"
-            android:maxLines="1" />
+            android:maxLines="1"/>
 
     </LinearLayout>
 
@@ -90,44 +120,45 @@
     <LinearLayout
         android:id="@+id/searchBar"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="@color/bgCard"
+        android:layout_height="50dp"
+        android:background="#0A0A0A"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
         android:visibility="gone">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:src="@drawable/ic_search"
-            android:tint="@color/textSecondary" />
+            android:tint="#666666"/>
 
         <EditText
             android:id="@+id/etSearch"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:hint="@string/search_channels"
-            android:textColorHint="@color/textHint"
-            android:textColor="@color/textPrimary"
+            android:hint="Search channels..."
+            android:textColorHint="#444444"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
             android:background="@android:color/transparent"
-            android:paddingStart="8dp"
+            android:paddingStart="10dp"
             android:imeOptions="actionSearch"
-            android:inputType="text" />
+            android:inputType="text"/>
 
     </LinearLayout>
 
-    <!-- Progress bar -->
+    <!-- Thin red progress indicator -->
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="match_parent"
-        android:layout_height="3dp"
+        android:layout_height="2dp"
         style="?android:attr/progressBarStyleHorizontal"
         android:indeterminate="true"
         android:indeterminateTint="@color/colorPrimary"
-        android:visibility="gone" />
+        android:visibility="gone"/>
 
     <!-- Main content -->
     <FrameLayout
@@ -140,8 +171,9 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingTop="4dp"
-            android:paddingBottom="8dp" />
+            android:paddingTop="6dp"
+            android:paddingBottom="80dp"
+            android:scrollbars="none"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvChannels"
@@ -150,8 +182,10 @@
             android:visibility="gone"
             android:clipToPadding="false"
             android:paddingTop="4dp"
-            android:paddingBottom="8dp" />
+            android:paddingBottom="80dp"
+            android:scrollbars="none"/>
 
+        <!-- Empty state -->
         <LinearLayout
             android:id="@+id/emptyState"
             android:layout_width="match_parent"
@@ -161,18 +195,26 @@
             android:visibility="gone">
 
             <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
                 android:src="@drawable/ic_tv"
-                android:tint="@color/textHint" />
+                android:tint="#2A2A2A"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/no_channels"
-                android:textColor="@color/textSecondary"
+                android:text="No channels found"
+                android:textColor="#444444"
                 android:textSize="16sp"
-                android:layout_marginTop="12dp" />
+                android:layout_marginTop="14dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add a provider in Settings"
+                android:textColor="#333333"
+                android:textSize="13sp"
+                android:layout_marginTop="6dp"/>
 
         </LinearLayout>
 
