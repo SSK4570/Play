@@ -1,37 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#000000">
 
-    <!-- Toolbar: exactly matches screenshot -->
+    <!-- Toolbar: exactly like image 2 -->
+    <!-- Search | [RED TV TAB] | ........spacer........ | SETTINGS | POWER -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="58dp"
         android:background="#0A0000"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp">
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp">
 
-        <!-- Search -->
+        <!-- Search icon - white -->
         <ImageButton
             android:id="@+id/btnSearch"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:src="@drawable/ic_search"
-            android:tint="#AAAAAA"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
+            android:tint="#FFFFFF"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Search"/>
 
-        <!-- Active Live TV tab (red bg) -->
+        <!-- Active red TV tab (matches image 2 exactly) -->
         <FrameLayout
             android:id="@+id/btnLiveTab"
-            android:layout_width="52dp"
+            android:layout_width="56dp"
             android:layout_height="40dp"
-            android:background="@drawable/bg_tab_active">
-
+            android:background="@drawable/bg_tab_active"
+            android:layout_marginStart="2dp">
             <ImageView
                 android:layout_width="22dp"
                 android:layout_height="22dp"
@@ -40,30 +41,35 @@
                 android:tint="#FFFFFF"/>
         </FrameLayout>
 
-        <!-- Spacer -->
-        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1"/>
+        <!-- Spacer fills middle -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"/>
 
-        <!-- Settings -->
+        <!-- Settings - white -->
         <ImageButton
             android:id="@+id/btnSettings"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:src="@drawable/ic_settings"
-            android:tint="#AAAAAA"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
+            android:tint="#FFFFFF"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Settings"/>
 
-        <!-- Power -->
+        <!-- Power - white -->
         <ImageButton
             android:id="@+id/btnPower"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:src="@drawable/ic_power"
-            android:tint="#AAAAAA"
-            android:background="?attr/selectableItemBackgroundBorderless"/>
+            android:tint="#FFFFFF"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Exit"/>
 
     </LinearLayout>
 
-    <!-- Category header breadcrumb with back arrow -->
+    <!-- Category breadcrumb with ← back arrow (red) -->
     <LinearLayout
         android:id="@+id/tvCategoryHeader"
         android:layout_width="match_parent"
@@ -113,7 +119,7 @@
             android:layout_width="18dp"
             android:layout_height="18dp"
             android:src="@drawable/ic_search"
-            android:tint="#555555"/>
+            android:tint="#888888"/>
 
         <EditText
             android:id="@+id/etSearch"
@@ -166,7 +172,6 @@
             android:paddingBottom="8dp"
             android:scrollbars="none"/>
 
-        <!-- Empty state -->
         <LinearLayout
             android:id="@+id/emptyState"
             android:layout_width="match_parent"

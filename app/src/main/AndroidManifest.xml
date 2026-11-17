@@ -10,9 +10,15 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- Android TV: declare touchscreen NOT required -->
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
+    <!-- TV needs these -->
+    <uses-feature android:name="android.software.leanback" android:required="false"/>
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
+        android:banner="@drawable/ic_tv_banner"
         android:label="@string/app_name"
         android:roundIcon="@drawable/ic_launcher_round"
         android:supportsRtl="true"
@@ -21,6 +27,7 @@
         android:hardwareAccelerated="true"
         android:largeHeap="true">
 
+        <!-- Phone/Tablet launcher -->
         <activity
             android:name=".ui.SplashActivity"
             android:exported="true"
@@ -29,6 +36,19 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Android TV launcher entry point -->
+        <activity
+            android:name=".ui.TvMainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden"
+            android:theme="@style/Theme.NexPlayer"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
 

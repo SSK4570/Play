@@ -1,4 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="@android:color/white" android:pathData="M8,5v14l11,-7z"/>
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <!-- Outer circle outline -->
+    <path
+        android:strokeColor="#CCCCCC"
+        android:strokeWidth="1.5"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M12,2 A10,10 0 1,0 12,22 A10,10 0 1,0 12,2 Z"/>
+    <!-- Play triangle inside -->
+    <path
+        android:fillColor="#CCCCCC"
+        android:pathData="M10,8 L10,16 L17,12 Z"/>
 </vector>
