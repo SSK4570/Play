@@ -133,8 +133,13 @@ public class ChannelListActivity extends AppCompatActivity {
         Provider provider = AppPrefs.get(this).getActiveProvider();
         if (provider == null) { showEmpty(); return; }
 
-        // Try cache first — fast path
-        if (ChannelCache.hasCached(this, provider.getId())) {
+        // Auto-reload: clear cache every time app opens (if setting enabled)
+        if (AppPrefs.get(this).isAutoReload()) {
+            ChannelCache.clear(this, provider.getId());
+        }
+
+        // Try cache first — fast path (only if NOT auto-reload)
+        if (!AppPrefs.get(this).isAutoReload() && ChannelCache.hasCached(this, provider.getId())) {
             List<Channel> cached = ChannelCache.load(this, provider.getId());
             if (!cached.isEmpty()) {
                 AppPrefs.get(this).setFromCache(true);

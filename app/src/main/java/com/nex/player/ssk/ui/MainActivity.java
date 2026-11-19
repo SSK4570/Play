@@ -92,11 +92,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateCacheBadge() {
-        TextView tvCache = findViewById(R.id.tvCacheLabel);
-        if (AppPrefs.get(this).isFromCache()) {
-            tvCache.setVisibility(View.VISIBLE);
-        } else {
-            tvCache.setVisibility(View.GONE);
-        }
+        // FROM CACHE badge removed — no longer shown
     }
 }

@@ -118,4 +118,52 @@ public class AppPrefs {
         if (recent.size() > MAX_RECENT) recent = recent.subList(0, MAX_RECENT);
         prefs.edit().putString(KEY_RECENT_CHANNELS, gson.toJson(recent)).apply();
     }
+
+    // ── Theme ─────────────────────────────────────────────────────────────
+    public static final String THEME_DARK_RED    = "dark_red";
+    public static final String THEME_DARK_YELLOW = "dark_yellow";
+    public static final String THEME_DARK_PURPLE = "dark_purple";
+    public static final String THEME_DARK_BLUE   = "dark_blue";
+    private static final String KEY_THEME = "app_theme";
+
+    public String getTheme() {
+        return prefs.getString(KEY_THEME, THEME_DARK_RED);
+    }
+    public void setTheme(String theme) {
+        prefs.edit().putString(KEY_THEME, theme).apply();
+    }
+
+    // ── Player quality ─────────────────────────────────────────────────────
+    public static final String QUALITY_LOW    = "low";
+    public static final String QUALITY_MEDIUM = "medium";
+    public static final String QUALITY_HIGH   = "high";
+    private static final String KEY_QUALITY = "player_quality";
+
+    public String getPlayerQuality() {
+        return prefs.getString(KEY_QUALITY, QUALITY_HIGH);
+    }
+    public void setPlayerQuality(String quality) {
+        prefs.edit().putString(KEY_QUALITY, quality).apply();
+    }
+
+    // ── EPG support in player ─────────────────────────────────────────────
+    private static final String KEY_EPG_IN_PLAYER = "epg_in_player";
+
+    public boolean isEpgInPlayer() {
+        return prefs.getBoolean(KEY_EPG_IN_PLAYER, true);
+    }
+    public void setEpgInPlayer(boolean enabled) {
+        prefs.edit().putBoolean(KEY_EPG_IN_PLAYER, enabled).apply();
+    }
+
+    // ── Auto-reload playlist on app open ──────────────────────────────────
+    private static final String KEY_AUTO_RELOAD = "auto_reload";
+
+    public boolean isAutoReload() {
+        return prefs.getBoolean(KEY_AUTO_RELOAD, true);
+    }
+    public void setAutoReload(boolean enabled) {
+        prefs.edit().putBoolean(KEY_AUTO_RELOAD, enabled).apply();
+    }
+
 }

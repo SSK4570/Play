@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,52 +17,69 @@ import java.util.List;
 
 public class ProviderListAdapter extends RecyclerView.Adapter<ProviderListAdapter.VH> {
 
-    public interface OnSelect { void select(Provider p); }
-    public interface OnDelete { void delete(Provider p); }
+    public interface OnProviderClick  { void onClick(Provider p); }
+    public interface OnProviderMore   { void onMore(Provider p); }
 
     private final List<Provider> items;
-    private final OnSelect onSelect;
-    private final OnDelete onDelete;
+    private final OnProviderClick onActivate;
+    private final OnProviderMore  onMore;
+    private long activeId;
 
-    public ProviderListAdapter(List<Provider> items, OnSelect onSelect, OnDelete onDelete) {
-        this.items = items;
-        this.onSelect = onSelect;
-        this.onDelete = onDelete;
+    public ProviderListAdapter(List<Provider> items, long activeId,
+                               OnProviderClick onActivate, OnProviderMore onMore) {
+        this.items      = items;
+        this.activeId   = activeId;
+        this.onActivate = onActivate;
+        this.onMore     = onMore;
     }
 
-    @NonNull
-    @Override
+    @NonNull @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_provider, parent, false);
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_provider, parent, false);
         return new VH(v);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull VH holder, int position) {
-        Provider p = items.get(position);
-        holder.tvName.setText(p.getName());
-        holder.tvUrl.setText(p.getDisplayUrl());
-        if (p.getChannelCount() > 0) {
-            holder.tvCount.setText(p.getChannelCount() + " channels");
+    public void onBindViewHolder(@NonNull VH h, int pos) {
+        Provider p      = items.get(pos);
+        boolean active  = (p.getId() == activeId)
+                || (activeId == -1 && pos == 0);
+
+        h.tvName.setText(p.getName().isEmpty() ? p.getDisplayUrl() : p.getName());
+
+        // Show URL below name (like image 2)
+        String url = p.getDisplayUrl();
+        if (url != null && !url.isEmpty()) {
+            h.tvUrl.setText(url);
+            h.tvUrl.setVisibility(View.VISIBLE);
         } else {
-            holder.tvCount.setText("");
+            h.tvUrl.setVisibility(View.GONE);
         }
-        holder.itemView.setOnClickListener(v -> onSelect.select(p));
-        holder.btnDelete.setOnClickListener(v -> onDelete.delete(p));
+
+        h.rbActive.setChecked(active);
+
+        // Clicking the row: only activate if NOT already active
+        h.itemView.setOnClickListener(v -> {
+            if (!active) onActivate.onClick(p);
+            // If already active (ticked), do nothing — don't reload
+        });
+
+        h.btnMore.setOnClickListener(v -> onMore.onMore(p));
     }
 
-    @Override
-    public int getItemCount() { return items.size(); }
+    @Override public int getItemCount() { return items == null ? 0 : items.size(); }
 
     static class VH extends RecyclerView.ViewHolder {
-        TextView tvName, tvUrl, tvCount;
-        ImageButton btnDelete;
+        RadioButton rbActive;
+        TextView tvName, tvUrl;
+        ImageButton btnMore;
         VH(View v) {
             super(v);
-            tvName = v.findViewById(R.id.tvProviderName);
-            tvUrl = v.findViewById(R.id.tvProviderUrl);
-            tvCount = v.findViewById(R.id.tvProviderCount);
-            btnDelete = v.findViewById(R.id.btnDeleteProvider);
+            rbActive = v.findViewById(R.id.rbActive);
+            tvName   = v.findViewById(R.id.tvProviderName);
+            tvUrl    = v.findViewById(R.id.tvProviderUrl);
+            btnMore  = v.findViewById(R.id.btnProviderMore);
         }
     }
 }
